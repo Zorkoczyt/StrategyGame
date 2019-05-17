@@ -1,0 +1,24 @@
+﻿@model StrategyGame.ViewModels.AddUnitViewModel
+
+@{
+    ViewData["Title"] = "AddUnit";
+}
+
+<h2>
+    Add unit
+</h2>
+<hr />
+<div class="col-md-4">
+    <form asp-controller="Country" asp-action="AddUnit">
+        <select class="form-control" asp-for="UnitId" asp-items="@(new SelectList(Model.Units,"Id","Type"))">
+            <option>--- Choose unit ---</option>
+        </select>
+        <span asp-validation-for="UnitId" class="text-danger"></span>
+        <input type="number" asp-for="Quantity" />
+        <span asp-validation-for="Quantity" class="text-danger"></span>
+        <div class="form-group">
+            <input type="submit" value="Save" class="btn btn-default" />
+            <a asp-action="Details" asp-route-id=@Model.Id>Cancel</a>
+        </div>
+    </form>
+</div>

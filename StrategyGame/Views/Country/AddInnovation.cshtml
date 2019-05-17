@@ -1,0 +1,22 @@
+﻿@model StrategyGame.ViewModels.SelectedInnovationViewModel
+
+@{
+    ViewData["Title"] = "AddInnovation";
+}
+
+<h2>
+    Add innovation
+</h2>
+<hr />
+<div class="col-md-4">
+    <form asp-controller="Country" asp-action="AddInnovation">
+        <select class="form-control" asp-for="InnovationId" asp-items="@(new SelectList(Model.Innovations,"Id","Type"))">
+            <option>--- Choose innovation ---</option>
+        </select>
+        <span asp-validation-for="InnovationId" class="text-danger"></span>
+        <div class="form-group">
+            <input type="submit" value="Save" class="btn btn-default" />
+            <a asp-action="Details" asp-route-id=@Model.Id>Cancel</a>
+        </div>
+    </form>
+</div>

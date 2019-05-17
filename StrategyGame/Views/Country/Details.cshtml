@@ -1,0 +1,125 @@
+﻿@model StrategyGame.ViewModels.CountryDetailsViewModel
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>Country</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Population)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Population)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Potato)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Potato)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Gold)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Gold)
+        </dd>
+        @foreach (var buildingType in Model.CountryBuildings)
+        {
+            <dt>
+                @buildingType.Building.Type
+            </dt>
+            <dd>
+                @buildingType.Count
+            </dd>
+        }
+    </dl>
+    <h4>Units</h4>
+    <hr />
+    <h5>Defending units</h5>
+    <table style="width:10%">
+        @foreach (var unit in Model.CountryUnits)
+        {
+            if (unit.GroupingType == GroupingType.Defending)
+            {
+                <tr>
+                    <th>
+                        @unit.Unit.Type
+                    </th>
+                    <td>
+                        @unit.Count
+                    </td>
+                </tr>
+            }
+        }
+    </table>
+    <hr />
+    <h5>Attacking units</h5>
+    <table style="width:10%">
+        @foreach (var unit in Model.CountryUnits)
+        {
+            if (unit.GroupingType == GroupingType.Attacking)
+            {
+                <tr>
+                    <th>
+                        @unit.Unit.Type
+                    </th>
+                    <td>
+                        @unit.Count
+                    </td>
+                </tr>
+            }
+        }
+    </table>
+    <hr />
+    <div>
+        <dl class="dl-horizontal">
+            <dt>
+                Defense Points:
+            </dt>
+            <dd>
+                @Model.DefensePoint
+            </dd>
+            <dt>
+                Attack Points:
+            </dt>
+            <dd>
+                @Model.AttackPoint
+            </dd>
+        </dl>
+    </div>
+    <hr />
+    @if (Model.CountryInnovations.Count != 0)
+    {
+        <div>
+            <h4>Innovations</h4>
+
+            @foreach (var innovation in Model.CountryInnovations)
+            {
+                <h5>@innovation.Innovation.Type</h5>
+            }
+
+        </div>
+        <hr />
+    }
+</div>
+
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
+    <a asp-action="Index">Back to List</a> |
+    <a asp-action="AddUnit" asp-route-id="@Model.Id">Purchase unit</a> |
+    <a asp-action="AddBuilding" asp-route-id="@Model.Id">Add building</a> |
+    <a asp-action="AddInnovation" asp-route-id="@Model.Id">Add innovation</a> |
+    <a asp-action="GroupingUnit" asp-route-id="@Model.Id">Group units</a> |
+    <a asp-action="AttackCountry" asp-route-id="@Model.Id">Attack Country</a>
+</div>

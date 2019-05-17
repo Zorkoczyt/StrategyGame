@@ -1,0 +1,22 @@
+﻿@model StrategyGame.ViewModels.SelectedBuildingViewModel
+
+@{
+    ViewData["Title"] = "AddBuilding";
+}
+
+<h2>
+    Add building
+</h2>
+<hr />
+<div class="col-md-4">
+    <form asp-controller="Country" asp-action="AddBuilding">
+        <select class="form-control" asp-for="BuildingId" asp-items="@(new SelectList(Model.Buildings,"Id","Type"))">
+            <option>--- Choose building ---</option>
+        </select>
+        <span asp-validation-for="BuildingId" class="text-danger"></span>
+        <div class="form-group">
+            <input type="submit" value="Save" class="btn btn-default" />
+            <a asp-action="Details" asp-route-id=@Model.Id>Cancel</a>
+        </div>
+    </form>
+</div>

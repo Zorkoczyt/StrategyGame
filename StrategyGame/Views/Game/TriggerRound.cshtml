@@ -1,0 +1,15 @@
+﻿@model  StrategyGame.ViewModels.RoundViewModel
+
+@{ 
+    ViewData["Title"] = "Trigger round";
+}
+
+    <h2>@Model.Turn</h2>
+    <form asp-action="TriggerRound">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="form-group">
+            <input type="submit" value="Trigger" class="btn btn-default" />
+        </div>
+    </form>
+
+

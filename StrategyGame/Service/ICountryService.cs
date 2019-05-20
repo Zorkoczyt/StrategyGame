@@ -25,9 +25,8 @@ namespace StrategyGame.Service
         Task EditAsync(int id, CountryCreateEditViewModel countryViewModel);
         Task<List<Innovation>> ListInnovationssAsync();
         Task AddInnovationAsync(int id, int innovationId);
-        Task GroupingUnitsAsync(int id, int unitId, int quantity, bool isAttacking);
-        Task AttackAsync(int id, int enemyCountryId);
         Task<List<Country>> ListEnememyCountries(int id);
         Task CalculateBattlePointsAsync(int id);
+        Task AttackAsync(int id, int unitId, int enemyCountryId, int quantity);
     }
 }

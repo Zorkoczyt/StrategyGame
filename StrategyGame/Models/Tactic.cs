@@ -10,6 +10,7 @@ namespace StrategyGame.Models
         public Tactic()
         {
             UpgradeStat = 1.1;
+            Point = 100;
         }
         public override InnovationType Type => InnovationType.Tactic;
     }

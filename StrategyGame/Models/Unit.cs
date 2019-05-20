@@ -13,6 +13,7 @@ namespace StrategyGame.Models
         public int DefensePoint { get; set; }
         public int Payment { get; set; }
         public int Supply { get; set; }
+        public int Point { get; set; }
         public abstract UnitType Type { get; }
         public ICollection<CountryUnit> CountryUnit { get; set; }
     }

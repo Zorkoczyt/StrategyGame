@@ -141,9 +141,11 @@ namespace StrategyGame.Controllers
         }
         public async Task<IActionResult> AddInnovation(int id)
         {
-            SelectedInnovationViewModel selectedInnovationViewModel = new SelectedInnovationViewModel();
-            selectedInnovationViewModel.Innovations = await _countryService.ListCountryAvailableInnovationsAsync(id);
-            selectedInnovationViewModel.Id = id;
+            SelectedInnovationViewModel selectedInnovationViewModel = new SelectedInnovationViewModel
+            {
+                Innovations = await _countryService.ListCountryAvailableInnovationsAsync(id),
+                Id = id
+            };
             return View(selectedInnovationViewModel);
         }
 
@@ -169,63 +171,48 @@ namespace StrategyGame.Controllers
 
         public async Task<IActionResult> GroupingUnit(int id)
         {
-            GroupUnitViewModel groupUnitViewModel = new GroupUnitViewModel();
-            groupUnitViewModel.Id = id;
-            groupUnitViewModel.Units = await _countryService.ListUnitsAsync();
-            groupUnitViewModel.CountryUnits = await _countryService.ListCountryUnitsAsync(id);
+            GroupUnitViewModel groupUnitViewModel = new GroupUnitViewModel
+            {
+                Id = id,
+                Units = await _countryService.ListUnitsAsync(),
+                CountryUnits = await _countryService.ListCountryUnitsAsync(id)
+            };
             return View(groupUnitViewModel);
+        }
+
+        public async Task<IActionResult> Attack(int id)
+        {
+            AttackViewModel attackViewModel = new AttackViewModel();
+            attackViewModel.Id = id;
+            attackViewModel.Units = await _countryService.ListUnitsAsync();
+            attackViewModel.CountryUnits = await _countryService.ListCountryUnitsAsync(id);
+            attackViewModel.Countries = await _countryService.ListEnememyCountries(id);
+            return View(attackViewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> GroupingUnit(GroupUnitViewModel groupUnitViewModel)
+        public async Task<IActionResult> Attack(AttackViewModel attackViewModel)
         {
             if (ModelState.IsValid)
             {
                 try
                 {
-                    await _countryService.GroupingUnitsAsync(groupUnitViewModel.Id,
-                            groupUnitViewModel.UnitId,
-                            groupUnitViewModel.Quantity,
-                            groupUnitViewModel.IsAttacking);
-                    await _countryService.CalculateBattlePointsAsync(groupUnitViewModel.Id);
+                    await _countryService.AttackAsync(attackViewModel.Id,
+                        attackViewModel.UnitId,
+                        attackViewModel.EnemyCountryId,
+                        attackViewModel.Quantity);
+                    await _countryService.CalculateBattlePointsAsync(attackViewModel.Id);
                 }
                 catch (GameException e)
                 {
                     ModelState.AddModelError(e.Key, e.Description);
                 }
             }
-            groupUnitViewModel.Units = await _countryService.ListUnitsAsync();
-            groupUnitViewModel.CountryUnits = await _countryService.ListCountryUnitsAsync(groupUnitViewModel.Id);
-            return View(groupUnitViewModel);
-        }
-
-        public async Task<IActionResult> AttackCountry(int id)
-        {
-            AttackCountryViewModel attackCountryViewModel = new AttackCountryViewModel();
-            attackCountryViewModel.Countries = await _countryService.ListEnememyCountries(id);
-            attackCountryViewModel.Id = id;
-            return View(attackCountryViewModel);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AttackCountry(AttackCountryViewModel attackCountryViewModel)
-        {
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    await _countryService.AttackAsync(attackCountryViewModel.Id, attackCountryViewModel.EnemyCountryId);
-                    return RedirectToAction("Details", new { @id = attackCountryViewModel.Id });
-                }
-                catch (GameException e)
-                {
-                    ModelState.AddModelError(e.Key, e.Description);
-                }
-            }
-            attackCountryViewModel.Countries = await _countryService.ListEnememyCountries(attackCountryViewModel.Id);
-            return View(attackCountryViewModel);
+            attackViewModel.CountryUnits = await _countryService.ListCountryUnitsAsync(attackViewModel.Id);
+            attackViewModel.Countries = await _countryService.ListEnememyCountries(attackViewModel.Id);
+            attackViewModel.Units = await _countryService.ListUnitsAsync();
+            return View(attackViewModel);
         }
     }
 }

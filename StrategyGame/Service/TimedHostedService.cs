@@ -30,7 +30,7 @@ namespace StrategyGame.Service
         private void DoWork(object state)
         {
             _logger.LogInformation($"[{DateTime.Now}] New Game turn has started");
-            _gameService.ProcessRound();
+            _gameService.ProcessRoundAsync();
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

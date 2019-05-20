@@ -14,6 +14,7 @@ namespace StrategyGame.Models
             DefensePoint = 5;
             Payment = 3;
             Supply = 2;
+            Point = 10;
         }
 
         public override UnitType Type => UnitType.Elit;

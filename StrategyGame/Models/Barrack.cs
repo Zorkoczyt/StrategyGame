@@ -15,6 +15,7 @@ namespace StrategyGame.Models
         {
             Id = 2;
             Soldiers = 200;
+            Point = 50;
         }
     }
 }

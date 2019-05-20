@@ -9,9 +9,9 @@ namespace StrategyGame.Service
 {
     public interface IGameService
     {
-        Task ProcessRound();
+        Task ProcessRoundAsync();
         Task<Game> GetGame();
-        Task<RoundViewModel> GetRound();
+        Task<RoundViewModel> GetRoundAsync();
         IEnumerable<Country> ListCountriesByLeaderBoard(Game game);
     }
 }

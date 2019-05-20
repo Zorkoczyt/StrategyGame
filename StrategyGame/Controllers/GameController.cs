@@ -20,7 +20,7 @@ namespace StrategyGame.Controllers
 
         public async Task<IActionResult> Index()
         {
-            return View(await _gameService.GetRound());
+            return View(await _gameService.GetRoundAsync());
         }
 
         public async Task<IActionResult> TriggerRound(int? id)
@@ -33,7 +33,7 @@ namespace StrategyGame.Controllers
         [HttpPost]
         public async Task<IActionResult> TriggerRound()
         {
-            await _gameService.ProcessRound();
+            await _gameService.ProcessRoundAsync();
             return RedirectToAction(nameof(TriggerRound));
         }
     }

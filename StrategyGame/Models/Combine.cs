@@ -10,6 +10,7 @@ namespace StrategyGame.Models
         public Combine()
         {
             UpgradeStat = 1.15;
+            Point = 100;
         }
 
         public override InnovationType Type => InnovationType.Combine;

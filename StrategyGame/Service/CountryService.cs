@@ -56,7 +56,8 @@ namespace StrategyGame.Service
             List<CountryListViewModel> countryListViewModels = new List<CountryListViewModel>();
             List<Country> countries = await _context.Countries.ToListAsync();
             countries.ForEach(country => countryListViewModels.Add(new CountryListViewModel(country)));
-            IEnumerable<CountryListViewModel> countriesOrderByPoint = countryListViewModels.OrderByDescending(c => c.Point);
+            IEnumerable<CountryListViewModel> countriesOrderByPoint = countryListViewModels
+                .OrderByDescending(c => c.Point);
 
             return countriesOrderByPoint;
         }
@@ -71,8 +72,25 @@ namespace StrategyGame.Service
                 .Include(x => x.CountryInnovations)
                     .ThenInclude(x => x.Innovation)
                 .FirstOrDefaultAsync(m => m.Id == id);
+            BuildingProgressViewModel buildingProgressViewModel = await DisplayBuildingProgress(id);
+            InnovationProgressViewModel innovationProgressViewModel = await DisplayInnovationProgress(id);
+            BattleViewModel battleViewModel = await DisplayBattleDetails(id);
+            CountryDetailsViewModel countryDetailsViewModel = new CountryDetailsViewModel(country);
 
-            return new CountryDetailsViewModel(country);
+            if (buildingProgressViewModel != null)
+            {
+                countryDetailsViewModel.BuildingProgressViewModel = buildingProgressViewModel;
+            }
+            if (innovationProgressViewModel != null)
+            {
+                countryDetailsViewModel.InnovationProgressViewModel = innovationProgressViewModel;
+            }
+            if(battleViewModel != null)
+            {
+                countryDetailsViewModel.BattleViewModel = battleViewModel;
+            }
+
+            return countryDetailsViewModel;
         }
 
         public Task<List<Unit>> ListUnitsAsync()
@@ -83,70 +101,54 @@ namespace StrategyGame.Service
         public async Task AddUnitAsync(int id, int quantity, int unitId)
         {
             int unitQuantity = 0;
-            Country country = await _context.Countries.FirstOrDefaultAsync(m => m.Id == id);
-            Unit unit = await _context.Units.FirstOrDefaultAsync(u => u.Id == unitId);
-            var units = await _context.CountryUnits.Where(c => c.CountryId == id)
-                .Where(u => u.UnitId == unitId).FirstOrDefaultAsync();
+            Country country = await _context.Countries
+                .SingleAsync(m => m.Id == id);
+            Unit unit = await _context.Units
+                .SingleAsync(u => u.Id == unitId);
+            var units = await _context.CountryUnits
+                .Where(c => c.CountryId == id)
+                .Where(u => u.UnitId == unitId)
+                .FirstOrDefaultAsync();
 
-            if (quantity >= 0)
-            {
-                if (IsFreeBarrackCapacity(id, quantity))
-                {
-                    if (units == null)
-                    {
-                        if (unit != null)
-                        {
-                            if (unit.Price * quantity < country.Gold)
-                            {
-                                CountryUnit countryUnit = new CountryUnit
-                                {
-                                    CountryId = country.Id,
-                                    Country = country,
-                                    UnitId = unit.Id,
-                                    Unit = unit,
-                                    Count = quantity
-                                };
-                                country.CountryUnits.Add(countryUnit);
-                                unitQuantity += quantity;
-                                country.Gold -= unit.Price * quantity;
-                                _context.Countries.Update(country);
-                                _context.CountryUnits.Add(countryUnit);
-                            }
-                            else
-                            {
-                                throw new GameException("Quantity", "Not enough Gold!");
-                            }
-                        }
-                        else
-                        {
-                            throw new GameException("UnitId", "You must choose a unit!");
-                        }
-                    }
-                    else
-                    {
-                        if (unit.Price * quantity < country.Gold)
-                        {
-                            units.Count += quantity;
-                            country.Gold -= unit.Price * quantity;
-                            _context.Countries.Update(country);
-                            _context.CountryUnits.Update(units);
-                        }
-                        else
-                        {
-                            throw new GameException("Quantity", "Not enough Gold!");
-                        }
-                    }
-                    await _context.SaveChangesAsync();
-                }
-                else
-                {
-                    throw new GameException("Quantity", "Not enough capacity in barracks!");
-                }
-            }
-            else
+            if (quantity <= 0)
             {
                 throw new GameException("Quantity", "Quantity cannot be null or negative");
             }
+
+            if (!IsFreeBarrackCapacity(country, quantity))
+            {
+                throw new GameException("Quantity", "Not enough capacity in barracks!");
+            }
+
+            if (unit.Price * quantity > country.Gold)
+            {
+                throw new GameException("Quantity", "Not enough Gold!");
+            }
+
+            if (units == null)
+            {
+                CountryUnit countryUnit = new CountryUnit
+                {
+                    CountryId = country.Id,
+                    Country = country,
+                    UnitId = unit.Id,
+                    Unit = unit,
+                    Count = quantity
+                };
+                country.CountryUnits.Add(countryUnit);
+                unitQuantity += quantity;
+                country.Gold -= unit.Price * quantity;
+                _context.Countries.Update(country);
+                _context.CountryUnits.Add(countryUnit);
+            }
+            else
+            {
+                units.Count += quantity;
+                country.Gold -= unit.Price * quantity;
+                _context.Countries.Update(country);
+                _context.CountryUnits.Update(units);
+            }
+            await _context.SaveChangesAsync();
         }
 
         public async Task<List<CountryBuilding>> ListBuildingsAsync(int id)
@@ -154,49 +156,36 @@ namespace StrategyGame.Service
             List<CountryBuilding> countryBuildings = await _context.CountryBuildings
                                                                 .Where(c => c.CountryId == id)
                                                                 .ToListAsync();
-
             return countryBuildings;
         }
 
         public async Task DeleteAsync(int id)
         {
-            Country country = await _context.Countries.FirstOrDefaultAsync(m => m.Id == id);
+            Country country = await _context.Countries
+                .SingleAsync(m => m.Id == id);
             _context.Countries.Remove(country);
             await _context.SaveChangesAsync();
         }
 
         public Task<List<CountryUnit>> ListCountryUnitsAsync(int id)
         {
-            var countryUnits = _context.CountryUnits.Where(c => c.CountryId == id).ToListAsync();
+            var countryUnits = _context.CountryUnits
+                .Where(c => c.CountryId == id).ToListAsync();
 
             return countryUnits;
         }
-        public int CalculateUnitPoint(int unitId)
-        {
-            int result;
-            Unit unit = _context.Units.FirstOrDefault(u => u.Id == unitId);
 
-            if (unit.Type == UnitType.Elit)
-            {
-                result = 10;
-            }
-            else
-            {
-                result = 5;
-            }
-            return result;
-        }
-        public bool IsFreeBarrackCapacity(int countryId, int quantity)
+        public bool IsFreeBarrackCapacity(Country country, int quantity)
         {
             bool isFree = true;
             var barracks = _context.CountryBuildings
-                                        .Where(c => c.CountryId == countryId)
-                                        .Where(b => b.BuildingId == 2)
+                                        .Where(c => c.CountryId == country.Id)
+                                        .Where(b => b.Building.Type == BuildingType.Barrack)
                                         .FirstOrDefault();
 
             int barracksCapacity = barracks.Count * 200;
             var units = _context.CountryUnits
-                .Where(c => c.CountryId == countryId);
+                .Where(c => c.CountryId == country.Id);
             int numOfUnits = 0;
             foreach (var unit in units)
             {
@@ -213,38 +202,44 @@ namespace StrategyGame.Service
             return isFree;
         }
 
-
         public async Task AddBuildingAsync(int countryId, int buildingId)
         {
-            Country country = await _context.Countries.FirstOrDefaultAsync(c => c.Id == countryId);
+            Country country = await _context.Countries
+                .SingleAsync(c => c.Id == countryId);
 
             var buildingProgress = await _context.CountryBuildingProgresses
                                         .Where(c => c.CountryId == countryId)
                                         .FirstOrDefaultAsync();
 
-
-            Building building = await _context.Buildings.FirstOrDefaultAsync(b => b.Id == buildingId);
-
-            if (buildingProgress == null)
+            if (buildingProgress != null)
             {
-                CountryBuildingProgress countryBuildingProgress = new CountryBuildingProgress
-                {
-                    CountryId = country.Id,
-                    Country = country,
-                    BuildingId = building.Id,
-                    Building = building,
-                    TurnsLeft = 4
-                };
-
-                country.CountryBuildingProgresses.Add(countryBuildingProgress);
-                _context.CountryBuildingProgresses.Add(countryBuildingProgress);
-
-                await _context.SaveChangesAsync();
+                throw new GameException("BuildingId", "Another construction is in progress!");
             }
-            else
+            Building building = await _context.Buildings
+                .FirstOrDefaultAsync(b => b.Id == buildingId);
+
+            CountryBuildingProgress countryBuildingProgress = new CountryBuildingProgress
             {
-                throw new GameException("BuildingId", "Another construction is in progress");
+                CountryId = country.Id,
+                Country = country,
+                BuildingId = building.Id,
+                Building = building,
+                TurnsLeft = 5
+            };
+            country.CountryBuildingProgresses.Add(countryBuildingProgress);
+            _context.CountryBuildingProgresses.Add(countryBuildingProgress);
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task<BuildingProgressViewModel> DisplayBuildingProgress(int? id)
+        {
+            CountryBuildingProgress countryBuildingProgress = await _context.CountryBuildingProgresses
+                .FirstOrDefaultAsync(c => c.CountryId == id);
+            if (countryBuildingProgress != null)
+            {
+                return new BuildingProgressViewModel(countryBuildingProgress);
             }
+            return null;
         }
 
         public Task<List<Building>> ListBuildingsAsync()
@@ -254,14 +249,14 @@ namespace StrategyGame.Service
 
         public async Task<CountryCreateEditViewModel> GetCountryById(int id)
         {
-            Country country = await _context.Countries.FirstOrDefaultAsync(c => c.Id == id);
+            Country country = await _context.Countries.SingleAsync(c => c.Id == id);
             CountryCreateEditViewModel countryViewModel = new CountryCreateEditViewModel(country);
             return countryViewModel;
         }
 
         public async Task EditAsync(int id, CountryCreateEditViewModel countryViewModel)
         {
-            Country country = await _context.Countries.FirstOrDefaultAsync(c => c.Id == id);
+            Country country = await _context.Countries.SingleAsync(c => c.Id == id);
             country.Name = countryViewModel.Name;
             _context.Update(country);
 
@@ -275,48 +270,50 @@ namespace StrategyGame.Service
 
         public async Task AddInnovationAsync(int id, int innovationId)
         {
-            Country country = await _context.Countries.FirstOrDefaultAsync(c => c.Id == id);
-            Innovation innovation = await _context.Innovations.FirstOrDefaultAsync(i => i.Id == innovationId);
+            Country country = await _context.Countries.SingleAsync(c => c.Id == id);
+            Innovation innovation = await _context.Innovations.SingleAsync(i => i.Id == innovationId);
             var countryInnovations = await _context.CountryInnovations
                                                     .Where(c => c.CountryId == id)
                                                     .Where(i => i.InnovationId == innovationId)
                                                     .FirstOrDefaultAsync();
-            var countryInnovationProgress = await _context.CountryInnovationProgresses.FirstOrDefaultAsync(c => c.CountryId == id);
+            var countryInnovationProgress = await _context.CountryInnovationProgresses
+                .SingleOrDefaultAsync(c => c.CountryId == id);
 
-            if (countryInnovations == null)
+            if (countryInnovationProgress != null)
             {
-                if (countryInnovationProgress == null)
-                {
-                    CountryInnovationProgress newCountryInnovationProgress = new CountryInnovationProgress
-                    {
-                        CountryId = country.Id,
-                        Country = country,
-                        InnovationId = innovation.Id,
-                        Innovation = innovation,
-                        TurnsLeft = 14
-                    };
-                    country.CountryInnovationProgresses.Add(newCountryInnovationProgress);
-                    _context.CountryInnovationProgresses.Add(newCountryInnovationProgress);
-                    await _context.SaveChangesAsync();
-                }
-                else
-                {
-                    throw new GameException("InnovationId", "Another innovation is under progress!");
-                }
+                throw new GameException("InnovationId", "Another innovation is under progress!");
             }
-            else
+            CountryInnovationProgress newCountryInnovationProgress = new CountryInnovationProgress
             {
-                throw new GameException("InnovationId", "Already owned this innovation!");
-            }
+                CountryId = country.Id,
+                Country = country,
+                InnovationId = innovation.Id,
+                Innovation = innovation,
+                TurnsLeft = 15
+            };
+            country.CountryInnovationProgresses.Add(newCountryInnovationProgress);
+            _context.CountryInnovationProgresses.Add(newCountryInnovationProgress);
+            await _context.SaveChangesAsync();
         }
 
+        private async Task<InnovationProgressViewModel> DisplayInnovationProgress(int? id)
+        {
+            CountryInnovationProgress countryInnovationProgress = await _context.CountryInnovationProgresses
+                .Include(x => x.Innovation)
+                .Where(c => c.CountryId == id)
+                .FirstOrDefaultAsync();
+            if (countryInnovationProgress != null)
+            {
+                return new InnovationProgressViewModel(countryInnovationProgress);
+            }
+            return null;
+        }
         public async Task<List<CountryInnovation>> ListCountryInnovationsAsync(int id)
         {
             List<CountryInnovation> countryInnovations = await _context.CountryInnovations
                                                                 .Include(x => x.Innovation)
                                                                 .Where(c => c.CountryId == id)
                                                                 .ToListAsync();
-
             return countryInnovations;
         }
 
@@ -349,12 +346,12 @@ namespace StrategyGame.Service
             {
                 if (countryInnovation.Innovation.Type == InnovationType.CityWall)
                 {
-                    upgrade *= 1.2;
+                    upgrade *= countryInnovation.Innovation.UpgradeStat;
 
                 }
                 else if (countryInnovation.Innovation.Type == InnovationType.Tactic)
                 {
-                    upgrade *= 1.1;
+                    upgrade *= countryInnovation.Innovation.UpgradeStat;
                 }
             }
             return upgrade;
@@ -367,152 +364,26 @@ namespace StrategyGame.Service
             {
                 if (countryInnovation.Innovation.Type == InnovationType.OperationRebirth)
                 {
-                    upgrade *= 1.2;
+                    upgrade *= countryInnovation.Innovation.UpgradeStat;
                 }
                 else if (countryInnovation.Innovation.Type == InnovationType.Tactic)
                 {
-                    upgrade *= 1.1;
+                    upgrade *= countryInnovation.Innovation.UpgradeStat;
                 }
             }
-
             return upgrade;
         }
 
-        public async Task GroupingUnitsAsync(int id, int unitId, int quantity, bool isAttacking)
+        public Task<List<Country>> ListEnememyCountries(int id)
         {
-            if (quantity > 0)
-            {
-
-                Country country = await _context.Countries.FirstOrDefaultAsync(c => c.Id == id);
-                CountryUnit countryUnit = await _context.CountryUnits.Where(c => c.CountryId == id)
-                    .Where(u => u.UnitId == unitId)
-                    .FirstOrDefaultAsync();
-                CountryUnit findAttackingCountryUnit = await _context.CountryUnits.Where(c => c.CountryId == id)
-                    .Where(u => u.UnitId == unitId)
-                    .Where(type => type.GroupingType == GroupingType.Attacking)
-                    .FirstOrDefaultAsync();
-                AttackingCountryUnit attackingCountryUnit;
-
-                if (countryUnit != null)
-                {
-                    if (isAttacking)
-                    {
-                        if (countryUnit.Count - quantity >= 0)
-                        {
-                            if (findAttackingCountryUnit == null)
-                            {
-                                countryUnit.Count -= quantity;
-                                attackingCountryUnit = new AttackingCountryUnit(countryUnit);
-                                attackingCountryUnit.Count = quantity;
-                                country.AttackingCountryUnits.Add(attackingCountryUnit);
-                                _context.Countries.Update(country);
-                                _context.CountryUnits.Update(countryUnit);
-                                _context.CountryUnits.Update(attackingCountryUnit);
-                            }
-                            else
-                            {
-                                attackingCountryUnit = (AttackingCountryUnit)findAttackingCountryUnit;
-                                attackingCountryUnit.Count += quantity;
-                                countryUnit.Count -= quantity;
-                                _context.Countries.Update(country);
-                                _context.CountryUnits.Update(countryUnit);
-                                _context.CountryUnits.Update(attackingCountryUnit);
-                            }
-                        }
-                        else
-                        {
-                            throw new GameException("Quantity", "Not enough unit for grouping");
-                        }
-                    }
-                    else
-                    {
-                        attackingCountryUnit = (AttackingCountryUnit)findAttackingCountryUnit;
-                        if (attackingCountryUnit != null && attackingCountryUnit.Count - quantity >= 0)
-                        {
-                            attackingCountryUnit = (AttackingCountryUnit)findAttackingCountryUnit;
-                            attackingCountryUnit.Count -= quantity;
-                            countryUnit.Count += quantity;
-                            _context.Countries.Update(country);
-                            _context.CountryUnits.Update(countryUnit);
-                            _context.CountryUnits.Update(attackingCountryUnit);
-                        }
-                        else
-                        {
-                            throw new GameException("UnitId", "No attacking unit out there!");
-                        }
-                    }
-                }
-                else
-                {
-                    throw new GameException("UnitId", "There is no such unit!");
-                }
-            }
-            else
-            {
-                throw new GameException("Quantity", "Quantity cannot be null or negative");
-            }
-
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task AttackAsync(int id, int enemyCountryId)
-        {
-            Battle battle = await _context.Battles.FirstOrDefaultAsync(c => c.AttackingCountryId == id);
-
-            if (battle == null)
-            {
-                List<CountryUnit> attackingCountryunits = await _context.CountryUnits
-                    .Where(country => country.CountryId == id)
-                    .Where(countryUnit => countryUnit.GroupingType == GroupingType.Attacking)
-                    .ToListAsync();
-
-                List<CountryUnit> enemyCountryUnits = await _context.CountryUnits
-                    .Where(country => country.CountryId == enemyCountryId)
-                    .Where(countryUnit => countryUnit.GroupingType == GroupingType.Defending)
-                    .ToListAsync();
-
-                Game game = await _context.Games.FirstOrDefaultAsync();
-
-                if (attackingCountryunits.Count != 0)
-                {
-                    Battle newBattle = new Battle();
-                    newBattle.AttackingCountryId = id;
-                    newBattle.DefendingCountryId = enemyCountryId;
-                    newBattle.AttackingCountryUnits = attackingCountryunits.Cast<AttackingCountryUnit>().ToList();
-                    newBattle.DefendingCountryUnits = enemyCountryUnits;
-                    _context.Battles.Add(newBattle);
-                    game.Battles.Add(newBattle);
-                    _context.Games.Update(game);
-                    await _context.SaveChangesAsync();
-                }
-                else
-                {
-                    throw new GameException("EnemyCountryId", "You don't have available attacking units!");
-                }
-            }
-            else
-            {
-                throw new GameException("EnemyCountryId", "You've already started an attack!");
-            }
-        }
-
-        public async Task<List<Country>> ListEnememyCountries(int id)
-        {
-            List<Country> countries = await _context.Countries.ToListAsync();
-            foreach (var country in countries)
-            {
-                if (country.Id == id)
-                {
-                    countries.Remove(country);
-                    break;
-                }
-            }
-            return countries;
+            return _context.Countries
+                .Where(c => c.Id != id)
+                .ToListAsync();
         }
 
         public async Task CalculateBattlePointsAsync(int id)
         {
-            Country country = await _context.Countries.FirstOrDefaultAsync(c => c.Id == id);
+            Country country = await _context.Countries.SingleAsync(c => c.Id == id);
             double attackPoint = 0;
             double defensePoint = 0;
             foreach (var countryUnit in country.CountryUnits)
@@ -528,6 +399,94 @@ namespace StrategyGame.Service
             }
             country.AttackPoint = attackPoint * UpgradeAttackPoint(country);
             country.DefensePoint = defensePoint * UpgradeDefensePoint(country);
+        }
+
+        public async Task AttackAsync(int id, int unitId, int enemyCountryId, int quantity)
+        {
+            if (quantity <= 0)
+            {
+                throw new GameException("Quantity", "Quantity cannot be null or negative");
+            }
+
+            CountryUnit countryUnit = await _context.CountryUnits
+                .Where(c => c.CountryId == id)
+                .Where(u => u.UnitId == unitId)
+                .FirstOrDefaultAsync();
+
+            if (countryUnit == null || countryUnit.Count - quantity < 0)
+            {
+                throw new GameException("UnitId", "There is no available unit!");
+            }
+
+            Country country = await _context.Countries
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            Country enemyCountry = await _context.Countries
+                .FirstOrDefaultAsync(c => c.Id == enemyCountryId);
+
+            Game game = await _context.Games.FirstOrDefaultAsync();
+
+            Battle battle = await _context.Battles
+                .Where(c => c.AttackingCountryId == id)
+                .Where(c => c.DefendingCountryId == enemyCountryId)
+                .FirstOrDefaultAsync();
+
+            if (battle != null)
+            {
+                CountryUnit attackingCountryUnit = battle.AttackingCountryUnits
+                    .Where(unit => unit.UnitId == unitId)
+                    .FirstOrDefault();
+
+                if (attackingCountryUnit != null)
+                {
+                    attackingCountryUnit.Count += quantity;
+                    countryUnit.Count -= quantity;
+                    battle.AttackPoints += attackingCountryUnit.Unit.AttackPoint * quantity * UpgradeAttackPoint(country);
+                }
+                else
+                {
+                    AttackingCountryUnit newAttackingCountryUnit = new AttackingCountryUnit(countryUnit)
+                    {
+                        Count = quantity
+                    };
+                    countryUnit.Count -= quantity;
+                    battle.AttackingCountryUnits.Add(newAttackingCountryUnit);
+                    battle.AttackPoints += newAttackingCountryUnit.Unit.AttackPoint * quantity * UpgradeAttackPoint(country);
+                    country.AttackingCountryUnits.Add(newAttackingCountryUnit);
+                }
+                _context.Battles.Update(battle);
+            }
+            else
+            {
+                AttackingCountryUnit newAttackingCountryUnit = new AttackingCountryUnit(countryUnit)
+                {
+                    Count = quantity
+                };
+                countryUnit.Count -= quantity;
+                battle = new Battle(country, enemyCountry) {
+                    AttackPoints = newAttackingCountryUnit.Unit.AttackPoint * quantity * UpgradeAttackPoint(country)
+                };
+                battle.AttackingCountryUnits.Add(newAttackingCountryUnit);
+                _context.Battles.Add(battle);
+                country.AttackingCountryUnits.Add(newAttackingCountryUnit);
+                game.Battles.Add(battle);
+            }
+            _context.CountryUnits.Update(countryUnit);
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task<BattleViewModel> DisplayBattleDetails(int? id)
+        {
+            List<Battle> battles = await _context.Battles.Where(c => c.AttackingCountryId == id).ToListAsync();
+
+            if(battles != null)
+            {
+                return new BattleViewModel()
+                {
+                    Battles = battles
+                };
+            }
+            return null;
         }
     }
 }

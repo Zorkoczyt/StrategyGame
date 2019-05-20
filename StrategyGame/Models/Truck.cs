@@ -10,6 +10,7 @@ namespace StrategyGame.Models
         public Truck()
         {
             UpgradeStat = 1.1;
+            Point = 100;
         }
 
         public override InnovationType Type => InnovationType.Truck;

@@ -11,5 +11,6 @@ namespace StrategyGame.Models
         public double UpgradeStat { get; set; }
         public ICollection<CountryInnovation> CountryInnovations { get; set; }
         public abstract InnovationType Type { get; }
+        public int Point { get; set; }
     }
 }

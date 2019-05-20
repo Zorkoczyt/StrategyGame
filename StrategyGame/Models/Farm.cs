@@ -17,6 +17,7 @@ namespace StrategyGame.Models
             Id = 1;
             Population = 50;
             Potato = 200;
+            Point = 50;
         }
     }
 }

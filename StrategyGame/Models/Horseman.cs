@@ -14,6 +14,7 @@ namespace StrategyGame.Models
             DefensePoint = 2;
             Payment = 1;
             Supply = 1;
+            Point = 5;
         }
 
         public override UnitType Type => UnitType.Horseman;

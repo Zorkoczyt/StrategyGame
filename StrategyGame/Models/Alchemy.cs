@@ -10,6 +10,7 @@ namespace StrategyGame.Models
         public Alchemy()
         {
             UpgradeStat = 1.3;
+            Point = 100;
         }
 
         public override InnovationType Type => InnovationType.Alchemy;

@@ -44,6 +44,31 @@
             </dd>
         }
     </dl>
+    @if (Model.BuildingProgressViewModel != null)
+    {
+        <h5>Construction under progress</h5>
+        <dl>
+            <dt>
+                @Model.BuildingProgressViewModel.Building.Type
+            </dt>
+            <dd>
+                Turns left: @Model.BuildingProgressViewModel.TurnsLeft
+            </dd>
+        </dl>
+    }
+
+    @if (Model.InnovationProgressViewModel != null)
+    {
+        <h5>Innovation under progress</h5>
+        <dl>
+            <dt>
+                @Model.InnovationProgressViewModel.Innovation.Type
+            </dt>
+            <dd>
+                Turns left: @Model.InnovationProgressViewModel.TurnsLeft
+            </dd>
+        </dl>
+    }
     <h4>Units</h4>
     <hr />
     <h5>Defending units</h5>
@@ -51,24 +76,6 @@
         @foreach (var unit in Model.CountryUnits)
         {
             if (unit.GroupingType == GroupingType.Defending)
-            {
-                <tr>
-                    <th>
-                        @unit.Unit.Type
-                    </th>
-                    <td>
-                        @unit.Count
-                    </td>
-                </tr>
-            }
-        }
-    </table>
-    <hr />
-    <h5>Attacking units</h5>
-    <table style="width:10%">
-        @foreach (var unit in Model.CountryUnits)
-        {
-            if (unit.GroupingType == GroupingType.Attacking)
             {
                 <tr>
                     <th>
@@ -90,14 +97,31 @@
             <dd>
                 @Model.DefensePoint
             </dd>
-            <dt>
-                Attack Points:
-            </dt>
-            <dd>
-                @Model.AttackPoint
-            </dd>
         </dl>
     </div>
+    @if (Model.BattleViewModel.Battles.Count != 0)
+    {
+        <hr />
+        <h4>Battles</h4>
+        foreach (var battle in Model.BattleViewModel.Battles)
+        {
+            <h5>@battle.DefendingCountry.Name</h5>
+            <table style="width:10%">
+                @foreach (var attackingUnit in battle.AttackingCountryUnits)
+                {
+                    <tr>
+                        <th>
+                            @attackingUnit.Unit.Type
+                        </th>
+                        <td>
+                            @attackingUnit.Count
+                        </td>
+                    </tr>
+                }
+            </table>
+            <h5>Attack points: @battle.AttackPoints</h5>
+        }
+    }
     <hr />
     @if (Model.CountryInnovations.Count != 0)
     {
@@ -120,6 +144,5 @@
     <a asp-action="AddUnit" asp-route-id="@Model.Id">Purchase unit</a> |
     <a asp-action="AddBuilding" asp-route-id="@Model.Id">Add building</a> |
     <a asp-action="AddInnovation" asp-route-id="@Model.Id">Add innovation</a> |
-    <a asp-action="GroupingUnit" asp-route-id="@Model.Id">Group units</a> |
-    <a asp-action="AttackCountry" asp-route-id="@Model.Id">Attack Country</a>
+    <a asp-action="Attack" asp-route-id="@Model.Id">Attack</a>
 </div>

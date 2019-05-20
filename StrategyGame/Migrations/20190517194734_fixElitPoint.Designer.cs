@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StrategyGame.Models;
 
 namespace StrategyGame.Migrations
 {
     [DbContext(typeof(StrategyGameContext))]
-    partial class StrategyGameContextModelSnapshot : ModelSnapshot
+    [Migration("20190517194734_fixElitPoint")]
+    partial class fixElitPoint
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -24,8 +26,6 @@ namespace StrategyGame.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<double>("AttackPoints");
 
                     b.Property<int>("AttackingCountryId");
 
@@ -52,8 +52,6 @@ namespace StrategyGame.Migrations
 
                     b.Property<string>("Discriminator")
                         .IsRequired();
-
-                    b.Property<int>("Point");
 
                     b.HasKey("Id");
 
@@ -231,8 +229,6 @@ namespace StrategyGame.Migrations
                     b.Property<string>("Discriminator")
                         .IsRequired();
 
-                    b.Property<int>("Point");
-
                     b.Property<double>("UpgradeStat");
 
                     b.HasKey("Id");
@@ -281,7 +277,7 @@ namespace StrategyGame.Migrations
                     b.HasDiscriminator().HasValue("Barrack");
 
                     b.HasData(
-                        new { Id = 2, Point = 50, Soldiers = 200 }
+                        new { Id = 2, Soldiers = 200 }
                     );
                 });
 
@@ -298,7 +294,7 @@ namespace StrategyGame.Migrations
                     b.HasDiscriminator().HasValue("Farm");
 
                     b.HasData(
-                        new { Id = 1, Point = 50, Population = 50, Potato = 200 }
+                        new { Id = 1, Population = 50, Potato = 200 }
                     );
                 });
 
@@ -329,7 +325,7 @@ namespace StrategyGame.Migrations
                     b.HasDiscriminator().HasValue("Alchemy");
 
                     b.HasData(
-                        new { Id = 6, Point = 100, UpgradeStat = 1.3 }
+                        new { Id = 6, UpgradeStat = 1.3 }
                     );
                 });
 
@@ -343,7 +339,7 @@ namespace StrategyGame.Migrations
                     b.HasDiscriminator().HasValue("CityWall");
 
                     b.HasData(
-                        new { Id = 3, Point = 0, UpgradeStat = 1.2 }
+                        new { Id = 3, UpgradeStat = 1.2 }
                     );
                 });
 
@@ -357,7 +353,7 @@ namespace StrategyGame.Migrations
                     b.HasDiscriminator().HasValue("Combine");
 
                     b.HasData(
-                        new { Id = 2, Point = 100, UpgradeStat = 1.15 }
+                        new { Id = 2, UpgradeStat = 1.15 }
                     );
                 });
 
@@ -371,7 +367,7 @@ namespace StrategyGame.Migrations
                     b.HasDiscriminator().HasValue("OperationRebirth");
 
                     b.HasData(
-                        new { Id = 4, Point = 100, UpgradeStat = 1.2 }
+                        new { Id = 4, UpgradeStat = 1.2 }
                     );
                 });
 
@@ -385,7 +381,7 @@ namespace StrategyGame.Migrations
                     b.HasDiscriminator().HasValue("Tactic");
 
                     b.HasData(
-                        new { Id = 5, Point = 100, UpgradeStat = 1.1 }
+                        new { Id = 5, UpgradeStat = 1.1 }
                     );
                 });
 
@@ -399,7 +395,7 @@ namespace StrategyGame.Migrations
                     b.HasDiscriminator().HasValue("Truck");
 
                     b.HasData(
-                        new { Id = 1, Point = 100, UpgradeStat = 1.1 }
+                        new { Id = 1, UpgradeStat = 1.1 }
                     );
                 });
 

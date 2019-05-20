@@ -17,7 +17,7 @@ namespace StrategyGame.Service
             _context = context;
         }
 
-        public async Task ProcessRound()
+        public async Task ProcessRoundAsync()
         {
             Game game = await _context.Games
                 .Include(x => x.Countries)
@@ -50,7 +50,7 @@ namespace StrategyGame.Service
             _context.Games.Update(game);
             await _context.SaveChangesAsync();
         }
-        public async Task<RoundViewModel> GetRound()
+        public async Task<RoundViewModel> GetRoundAsync()
         {
             Game game = await _context.Games.FirstOrDefaultAsync();
             RoundViewModel roundViewModel = new RoundViewModel(game);
@@ -63,12 +63,13 @@ namespace StrategyGame.Service
             foreach (var country in countries)
             {
                 newCountryPoint = country.CountryUnits
-                    .Aggregate(0, (total, unit) => unit.Unit.Type == UnitType.Elit ? total + 10 * unit.Count : total + 5 * unit.Count);
+                    .Aggregate(0, (total, unit) => total + unit.Count * unit.Unit.Point);
 
                 newCountryPoint += country.CountryBuildings
-                    .Aggregate(0, (total, building) => building.Count * 50 + total);
+                    .Aggregate(0, (total, building) => building.Count * building.Building.Point + total);
 
-                newCountryPoint += country.Population + country.CountryInnovations.Count * 100;
+                newCountryPoint += country.CountryInnovations
+                    .Aggregate(0, (total, innovation) => total + innovation.Innovation.Point);
                 country.Point = newCountryPoint;
             }
         }
@@ -131,12 +132,13 @@ namespace StrategyGame.Service
             {
                 foreach (var buildingProgress in country.CountryBuildingProgresses)
                 {
-                    if (buildingProgress.TurnsLeft == 0)
+                    if (buildingProgress.TurnsLeft == 1)
                     {
                         if (buildingProgress.Building.Type == BuildingType.Farm)
                         {
                             country.Population += 50;
                         }
+
                         foreach (var countryBuilding in country.CountryBuildings)
                         {
                             if (buildingProgress.BuildingId == countryBuilding.BuildingId)
@@ -179,7 +181,7 @@ namespace StrategyGame.Service
                 {
                     if (country.Id == countryInnovationProgress.CountryId)
                     {
-                        if (countryInnovationProgress.TurnsLeft == 0)
+                        if (countryInnovationProgress.TurnsLeft == 1)
                         {
                             countryInnovation = new CountryInnovation
                             {
@@ -236,9 +238,10 @@ namespace StrategyGame.Service
         public void DoBattle(Game game)
         {
             ICollection<Battle> battles = game.Battles;
-            foreach(var battle in battles)
+            foreach (var battle in battles)
             {
-                if(battle.AttackingCountry.AttackPoint > battle.DefendingCountry.DefensePoint)
+                double actualCountryAttackPoint = CalculateBattleAttackPoint(battle) * UpgradeAttackPoint(battle.AttackingCountry);
+                if (actualCountryAttackPoint > battle.DefendingCountry.DefensePoint)
                 {
                     CalculateDefendingArmyLoss(battle.DefendingCountry);
                     battle.AttackingCountry.Gold += CalculateGoldLoot(battle.DefendingCountry);
@@ -246,20 +249,54 @@ namespace StrategyGame.Service
                     battle.DefendingCountry.Gold -= CalculateGoldLoot(battle.DefendingCountry);
                     battle.DefendingCountry.Potato -= CalculatePotatoLoot(battle.DefendingCountry);
                 }
-                else if(battle.DefendingCountry.DefensePoint > battle.AttackingCountry.AttackPoint)
+                else if (battle.DefendingCountry.DefensePoint > actualCountryAttackPoint)
                 {
-                    CalculateAttackingArmyLoss(battle.AttackingCountry);
+                    CalculateAttackingArmyLoss(battle.AttackingCountryUnits);
                 }
+                SendUnitHome(battle);
                 _context.Battles.Remove(battle);
             }
         }
 
-        public void CalculateAttackingArmyLoss(Country country)
+        public double CalculateBattleAttackPoint(Battle battle)
         {
-            foreach(var unit in country.CountryUnits)
+            double attackPoints = 0;
+
+            foreach (var unit in battle.AttackingCountryUnits)
             {
-                if(unit.GroupingType == GroupingType.Attacking)
-                unit.Count = (int) (unit.Count * 0.9);
+                attackPoints += unit.Unit.AttackPoint * unit.Count;
+            }
+
+            return attackPoints;
+        }
+
+        public void SendUnitHome(Battle battle)
+        {
+            foreach (var attackingUnit in battle.AttackingCountryUnits)
+            {
+                foreach (var countryUnit in battle.AttackingCountry.CountryUnits.ToList())
+                {
+                    if (attackingUnit.UnitId == countryUnit.UnitId)
+                    {
+                        if (attackingUnit.GroupingType == GroupingType.Attacking)
+                        {
+                            countryUnit.Count += attackingUnit.Count;
+                            attackingUnit.Count -= attackingUnit.Count;
+                        }
+                        if (countryUnit.GroupingType == GroupingType.Attacking)
+                        {
+                            battle.AttackingCountry.CountryUnits.Remove(countryUnit);
+                        }
+                    }
+                }
+            }
+            battle.AttackingCountry.AttackingCountryUnits.Clear();
+        }
+        public void CalculateAttackingArmyLoss(ICollection<AttackingCountryUnit> attackingCountryUnit)
+        {
+            foreach (var unit in attackingCountryUnit)
+            {
+                unit.Count = (int)(unit.Count * 0.9);
             }
         }
         public void CalculateDefendingArmyLoss(Country country)
@@ -295,7 +332,7 @@ namespace StrategyGame.Service
                 double defensePoint = 0;
                 foreach (var unit in country.CountryUnits)
                 {
-                    if(unit.GroupingType == GroupingType.Attacking)
+                    if (unit.GroupingType == GroupingType.Attacking)
                     {
                         attackPoint += unit.Count * unit.Unit.AttackPoint;
                     }
@@ -314,11 +351,11 @@ namespace StrategyGame.Service
             double upgrade = 1;
             foreach (var innovation in country.CountryInnovations)
             {
-                if(innovation.Innovation.Type == InnovationType.OperationRebirth)
+                if (innovation.Innovation.Type == InnovationType.OperationRebirth)
                 {
                     upgrade *= 1.2;
                 }
-                else if(innovation.Innovation.Type == InnovationType.Tactic)
+                else if (innovation.Innovation.Type == InnovationType.Tactic)
                 {
                     upgrade *= 1.1;
                 }

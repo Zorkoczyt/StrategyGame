@@ -10,5 +10,6 @@ namespace StrategyGame.Models
         public int Id { get; set; }
         public ICollection<CountryBuilding> CountryBuildings { get; set; }
         public abstract BuildingType Type { get; }
+        public int Point { get; set; }
     }
 }

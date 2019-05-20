@@ -10,6 +10,7 @@ namespace StrategyGame.Models
         public OperationRebirth()
         {
             UpgradeStat = 1.2;
+            Point = 100;
         }
 
         public override InnovationType Type => InnovationType.OperationRebirth;

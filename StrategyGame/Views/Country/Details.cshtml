@@ -71,22 +71,26 @@
     }
     <h4>Units</h4>
     <hr />
-    <h5>Defending units</h5>
-    <table style="width:10%">
-        @foreach (var unit in Model.CountryUnits)
-        {
-            if (unit.GroupingType == GroupingType.Defending)
+    <h4>Defending units</h4>
+    <table style="width:15%">
+        <tr>
+            @foreach (var unit in Model.CountryUnits)
             {
-                <tr>
-                    <th>
-                        @unit.Unit.Type
-                    </th>
+                if (unit.GroupingType == GroupingType.Defending)
+                {
                     <td>
-                        @unit.Count
+                        <table>
+                            <tr>
+                                <td>@unit.Unit.Type</td>
+                            </tr>
+                            <tr>
+                                <td>@unit.Count</td>
+                            </tr>
+                        </table>
                     </td>
-                </tr>
+                }
             }
-        }
+        </tr>
     </table>
     <hr />
     <div>
@@ -105,19 +109,23 @@
         <h4>Battles</h4>
         foreach (var battle in Model.BattleViewModel.Battles)
         {
-            <h5>@battle.DefendingCountry.Name</h5>
+            <h5><b>@battle.DefendingCountry.Name</b></h5>
             <table style="width:10%">
-                @foreach (var attackingUnit in battle.AttackingCountryUnits)
-                {
-                    <tr>
-                        <th>
-                            @attackingUnit.Unit.Type
-                        </th>
+                <tr>
+                    @foreach (var attackingUnit in battle.AttackingCountryUnits)
+                    {
                         <td>
-                            @attackingUnit.Count
+                            <table>
+                                <tr>
+                                    <td>@attackingUnit.Unit.Type</td>
+                                </tr>
+                                <tr>
+                                    <td>@attackingUnit.Count</td>
+                                </tr>
+                            </table>
                         </td>
-                    </tr>
-                }
+                    }
+                </tr>
             </table>
             <h5>Attack points: @battle.AttackPoints</h5>
         }

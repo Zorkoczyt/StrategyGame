@@ -52,7 +52,8 @@ namespace StrategyGame.Service
         }
         public async Task<RoundViewModel> GetRoundAsync()
         {
-            Game game = await _context.Games.FirstOrDefaultAsync();
+            Game game = await _context.Games
+                .FirstOrDefaultAsync();
             RoundViewModel roundViewModel = new RoundViewModel(game);
             return roundViewModel;
         }
@@ -70,12 +71,15 @@ namespace StrategyGame.Service
 
                 newCountryPoint += country.CountryInnovations
                     .Aggregate(0, (total, innovation) => total + innovation.Innovation.Point);
+                newCountryPoint += country.Population;
+
                 country.Point = newCountryPoint;
             }
         }
         public IEnumerable<Country> ListCountriesByLeaderBoard(Game game)
         {
-            IEnumerable<Country> countryListInOrder = game.Countries.OrderBy(country => country.Point);
+            IEnumerable<Country> countryListInOrder = game.Countries
+                .OrderBy(country => country.Point);
 
             return countryListInOrder;
         }
@@ -165,7 +169,8 @@ namespace StrategyGame.Service
 
             foreach (var country in countries)
             {
-                int supply = country.CountryUnits.Aggregate(0, (total, unit) => total + unit.Unit.Supply * unit.Count);
+                int supply = country.CountryUnits
+                    .Aggregate(0, (total, unit) => total + unit.Unit.Supply * unit.Count);
                 country.Potato -= supply;
             }
         }
@@ -229,7 +234,7 @@ namespace StrategyGame.Service
             {
                 if (countryInnovation.Innovation.Type == InnovationType.Alchemy)
                 {
-                    upgrade = 1.3;
+                    upgrade = countryInnovation.Innovation.UpgradeStat;
                 }
             }
 

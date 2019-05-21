@@ -10,6 +10,7 @@ namespace StrategyGame.Models
         public CityWall()
         {
             UpgradeStat = 1.2;
+            Point = 100;
         }
         public override InnovationType Type => InnovationType.CityWall;
     }

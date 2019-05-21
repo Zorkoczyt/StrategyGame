@@ -18,8 +18,11 @@ namespace StrategyGame.ViewModels
         public virtual ICollection<CountryBuilding> CountryBuildings { get; set; }
         public virtual ICollection<CountryUnit> CountryUnits { get; set; }
         public virtual ICollection<CountryInnovation> CountryInnovations { get; set; }
-        public BuildingProgressViewModel BuildingProgressViewModel { get; set; }
-        public InnovationProgressViewModel InnovationProgressViewModel { get; set; }
+        public virtual ICollection<CountryBuildingProgress> CountryBuildingProgresses { get; set; }
+        public virtual ICollection<CountryInnovationProgress> CountryInnovationProgresses { get; set; }
+        //public BuildingProgressViewModel BuildingProgressViewModel { get; set; }
+
+        //public InnovationProgressViewModel InnovationProgressViewModel { get; set; }
         public BattleViewModel BattleViewModel { get; set; }
         public CountryDetailsViewModel(Country country)
         {
@@ -33,6 +36,8 @@ namespace StrategyGame.ViewModels
             CountryBuildings = country.CountryBuildings;
             CountryUnits = country.CountryUnits;
             CountryInnovations = country.CountryInnovations;
+            CountryBuildingProgresses = country.CountryBuildingProgresses;
+            CountryInnovationProgresses = country.CountryInnovationProgresses;
         }
     }
 }

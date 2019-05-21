@@ -19,7 +19,7 @@ namespace StrategyGame.Service
 
         public async Task ProcessRoundAsync()
         {
-            Game game = await _context.Games
+            var game = await _context.Games
                 .Include(x => x.Countries)
                     .ThenInclude(x => x.CountryBuildings)
                         .ThenInclude(x => x.Building)
@@ -52,7 +52,7 @@ namespace StrategyGame.Service
         }
         public async Task<RoundViewModel> GetRoundAsync()
         {
-            Game game = await _context.Games
+            var game = await _context.Games
                 .FirstOrDefaultAsync();
             RoundViewModel roundViewModel = new RoundViewModel(game);
             return roundViewModel;
@@ -60,7 +60,7 @@ namespace StrategyGame.Service
         public void CalculateCountryPoint(Game game)
         {
             int newCountryPoint;
-            ICollection<Country> countries = game.Countries;
+            var countries = game.Countries;
             foreach (var country in countries)
             {
                 newCountryPoint = country.CountryUnits
@@ -76,17 +76,10 @@ namespace StrategyGame.Service
                 country.Point = newCountryPoint;
             }
         }
-        public IEnumerable<Country> ListCountriesByLeaderBoard(Game game)
-        {
-            IEnumerable<Country> countryListInOrder = game.Countries
-                .OrderBy(country => country.Point);
-
-            return countryListInOrder;
-        }
 
         public void ProcessTaxCredit(Game game)
         {
-            ICollection<Country> countries = game.Countries;
+            var countries = game.Countries;
 
             foreach (var country in countries)
             {
@@ -96,7 +89,7 @@ namespace StrategyGame.Service
 
         public void ProcessPotato(Game game)
         {
-            ICollection<Country> countries = game.Countries;
+            var countries = game.Countries;
             int farmNum = 0;
 
             foreach (var country in countries)
@@ -110,7 +103,7 @@ namespace StrategyGame.Service
 
         public void PayMilitary(Game game)
         {
-            ICollection<Country> countries = game.Countries;
+            var countries = game.Countries;
 
             foreach (var country in countries)
             {
@@ -129,7 +122,7 @@ namespace StrategyGame.Service
 
         private void ProcessBuilding(Game game)
         {
-            ICollection<Country> countries = game.Countries;
+            var countries = game.Countries;
             //refactor flatten
 
             foreach (var country in countries)
@@ -165,7 +158,7 @@ namespace StrategyGame.Service
 
         public void FeedingMilitary(Game game)
         {
-            ICollection<Country> countries = game.Countries;
+            var countries = game.Countries;
 
             foreach (var country in countries)
             {
@@ -177,9 +170,9 @@ namespace StrategyGame.Service
 
         public async Task ProcessInnovation(Game game)
         {
-            ICollection<Country> countries = game.Countries;
+            var countries = game.Countries;
             CountryInnovation countryInnovation;
-            List<CountryInnovationProgress> countryInnovationProgresses = await _context.CountryInnovationProgresses.ToListAsync();
+            var countryInnovationProgresses = await _context.CountryInnovationProgresses.ToListAsync();
             foreach (var country in countries)
             {
                 foreach (var countryInnovationProgress in countryInnovationProgresses)
@@ -216,11 +209,11 @@ namespace StrategyGame.Service
             {
                 if (countryInnovation.Innovation.Type == InnovationType.Truck)
                 {
-                    upgrade = countryInnovation.Innovation.UpgradeStat;
+                    upgrade *= countryInnovation.Innovation.UpgradeStat;
                 }
                 else if (countryInnovation.Innovation.Type == InnovationType.Combine)
                 {
-                    upgrade += countryInnovation.Innovation.UpgradeStat;
+                    upgrade *= countryInnovation.Innovation.UpgradeStat;
                 }
             }
 
@@ -242,7 +235,7 @@ namespace StrategyGame.Service
         }
         public void DoBattle(Game game)
         {
-            ICollection<Battle> battles = game.Battles;
+            var battles = game.Battles;
             foreach (var battle in battles)
             {
                 double actualCountryAttackPoint = CalculateBattleAttackPoint(battle) * UpgradeAttackPoint(battle.AttackingCountry);
@@ -329,7 +322,7 @@ namespace StrategyGame.Service
 
         public void CalculateBattlePoints(Game game)
         {
-            ICollection<Country> countries = game.Countries;
+            var countries = game.Countries;
 
             foreach (var country in countries)
             {

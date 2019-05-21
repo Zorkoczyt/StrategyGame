@@ -12,6 +12,5 @@ namespace StrategyGame.Service
         Task ProcessRoundAsync();
         Task<Game> GetGame();
         Task<RoundViewModel> GetRoundAsync();
-        IEnumerable<Country> ListCountriesByLeaderBoard(Game game);
     }
 }

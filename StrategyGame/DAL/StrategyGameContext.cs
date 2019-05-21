@@ -78,6 +78,11 @@ namespace StrategyGame.Models
                 .WithMany(x => x.CountryInnovationProgresses)
                 .HasForeignKey(x => x.CountryId);
 
+            modelBuilder.Entity<CountryBuildingProgress>()
+                .HasOne(x => x.Country)
+                .WithMany(x => x.CountryBuildingProgresses)
+                .HasForeignKey(x => x.CountryId);
+
             modelBuilder.Entity<Archer>().HasData(new Archer { Id = 1});
             modelBuilder.Entity<Horseman>().HasData(new Horseman { Id = 2});
             modelBuilder.Entity<Elit>().HasData(new Elit { Id = 3});

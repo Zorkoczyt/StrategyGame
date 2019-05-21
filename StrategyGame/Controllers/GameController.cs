@@ -22,7 +22,6 @@ namespace StrategyGame.Controllers
         {
             return View(await _gameService.GetRoundAsync());
         }
-
         public async Task<IActionResult> TriggerRound(int? id)
         {
             Game game = await _gameService.GetGame();

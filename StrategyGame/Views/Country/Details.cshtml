@@ -44,31 +44,53 @@
             </dd>
         }
     </dl>
-    @if (Model.BuildingProgressViewModel != null)
+
+    @if (Model.CountryBuildingProgresses.Count != 0)
     {
-        <h5>Construction under progress</h5>
-        <dl>
-            <dt>
-                @Model.BuildingProgressViewModel.Building.Type
-            </dt>
-            <dd>
-                Turns left: @Model.BuildingProgressViewModel.TurnsLeft
-            </dd>
-        </dl>
+        <h5><b>Building constructions under progress</b></h5>
+        <table style="width:auto">
+            <tr>
+                <td align="left">Turns left:  </td>
+                @foreach (var countryBuldingProgress in Model.CountryBuildingProgresses)
+                {
+                    <td>
+                        <table style="width:inherit">
+                            <tr>
+                                <td align="center">@countryBuldingProgress.Building.Type</td>
+                            </tr>
+                            <tr>
+                                <td align="center">@countryBuldingProgress.TurnsLeft</td>
+                            </tr>
+                        </table>
+                    </td>
+                }
+            </tr>
+        </table>
     }
 
-    @if (Model.InnovationProgressViewModel != null)
+    @if (Model.CountryInnovationProgresses.Count != 0)
     {
-        <h5>Innovation under progress</h5>
-        <dl>
-            <dt>
-                @Model.InnovationProgressViewModel.Innovation.Type
-            </dt>
-            <dd>
-                Turns left: @Model.InnovationProgressViewModel.TurnsLeft
-            </dd>
-        </dl>
+        <h5><b>Innovation under progress</b></h5>
+        <table style="width:auto">
+            <tr>
+                <td align="left">Turns left:  </td>
+                @foreach (var innovationProgress in Model.CountryInnovationProgresses)
+                {
+                    <td>
+                        <table style="width:inherit">
+                            <tr>
+                                <td align="center">@innovationProgress.Innovation.Type</td>
+                            </tr>
+                            <tr>
+                                <td align="center">@innovationProgress.TurnsLeft</td>
+                            </tr>
+                        </table>
+                    </td>
+                }
+            </tr>
+        </table>
     }
+
     <h4>Units</h4>
     <hr />
     <h4>Defending units</h4>

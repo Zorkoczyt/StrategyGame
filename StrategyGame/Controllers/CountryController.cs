@@ -100,9 +100,11 @@ namespace StrategyGame.Controllers
 
         public async Task<IActionResult> AddBuilding(int id)
         {
-            SelectedBuildingViewModel selectedBuildingViewModel = new SelectedBuildingViewModel();
-            selectedBuildingViewModel.Buildings = await _countryService.ListBuildingsAsync();
-            selectedBuildingViewModel.Id = id;
+            SelectedBuildingViewModel selectedBuildingViewModel = new SelectedBuildingViewModel
+            {
+                Buildings = await _countryService.ListBuildingsAsync(),
+                Id = id
+            };
             return View(selectedBuildingViewModel);
         }
 
@@ -169,24 +171,26 @@ namespace StrategyGame.Controllers
             return View(selectedInnovationViewModel);
         }
 
-        public async Task<IActionResult> GroupingUnit(int id)
-        {
-            GroupUnitViewModel groupUnitViewModel = new GroupUnitViewModel
-            {
-                Id = id,
-                Units = await _countryService.ListUnitsAsync(),
-                CountryUnits = await _countryService.ListCountryUnitsAsync(id)
-            };
-            return View(groupUnitViewModel);
-        }
+        //public async Task<IActionResult> GroupingUnit(int id)
+        //{
+        //    GroupUnitViewModel groupUnitViewModel = new GroupUnitViewModel
+        //    {
+        //        Id = id,
+        //        Units = await _countryService.ListUnitsAsync(),
+        //        CountryUnits = await _countryService.ListCountryUnitsAsync(id)
+        //    };
+        //    return View(groupUnitViewModel);
+        //}
 
         public async Task<IActionResult> Attack(int id)
         {
-            AttackViewModel attackViewModel = new AttackViewModel();
-            attackViewModel.Id = id;
-            attackViewModel.Units = await _countryService.ListUnitsAsync();
-            attackViewModel.CountryUnits = await _countryService.ListCountryUnitsAsync(id);
-            attackViewModel.Countries = await _countryService.ListEnememyCountries(id);
+            var attackViewModel = new AttackViewModel
+            {
+                Id = id,
+                Units = await _countryService.ListUnitsAsync(),
+                CountryUnits = await _countryService.ListCountryUnitsAsync(id),
+                Countries = await _countryService.ListEnememyCountries(id)
+            };
             return View(attackViewModel);
         }
 

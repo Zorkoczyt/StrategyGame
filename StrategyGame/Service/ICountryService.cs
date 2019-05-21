@@ -11,7 +11,7 @@ namespace StrategyGame.Service
     {
         Task CreateAsync(CountryCreateEditViewModel countryView);
         Task DeleteAsync(int id);
-        Task<IEnumerable<CountryListViewModel>> ListAllCountryByPointAsync();
+        Task<List<CountryListViewModel>> ListAllCountryByPointAsync();
         Task<CountryDetailsViewModel> FindCountryByIdAsync(int? Id);
         Task<List<Unit>> ListUnitsAsync();
         Task AddUnitAsync(int id, int quantity, int unitId);

@@ -123,7 +123,6 @@ namespace StrategyGame.Service
         private void ProcessBuilding(Game game)
         {
             var countries = game.Countries;
-            //refactor flatten
 
             foreach (var country in countries)
             {

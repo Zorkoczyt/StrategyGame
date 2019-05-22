@@ -42,7 +42,6 @@ namespace StrategyGame
             services.AddTransient<IGameService, GameService>();
             services.AddHostedService<TimedHostedService>();
             services.AddSingleton<StrategyGameContext>();
-
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

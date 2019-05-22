@@ -11,7 +11,6 @@ namespace StrategyGame.ViewModels
     {
         public int Id { get; set; }
         public int EnemyCountryId { get; set; }
-        public int MyProperty { get; set; }
         public List<Country> Countries { get; set; }
         [Required]
         public int UnitId { get; set; }

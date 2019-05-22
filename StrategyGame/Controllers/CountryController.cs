@@ -138,8 +138,12 @@ namespace StrategyGame.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, CountryCreateEditViewModel countryViewModel)
         {
-            await _countryService.EditAsync(id, countryViewModel);
-            return RedirectToAction(nameof(Index));
+            if (ModelState.IsValid)
+            {
+                await _countryService.EditAsync(id, countryViewModel);
+                return RedirectToAction(nameof(Index));
+            }
+            return View(countryViewModel);
         }
         public async Task<IActionResult> AddInnovation(int id)
         {
@@ -171,17 +175,6 @@ namespace StrategyGame.Controllers
             return View(selectedInnovationViewModel);
         }
 
-        //public async Task<IActionResult> GroupingUnit(int id)
-        //{
-        //    GroupUnitViewModel groupUnitViewModel = new GroupUnitViewModel
-        //    {
-        //        Id = id,
-        //        Units = await _countryService.ListUnitsAsync(),
-        //        CountryUnits = await _countryService.ListCountryUnitsAsync(id)
-        //    };
-        //    return View(groupUnitViewModel);
-        //}
-
         public async Task<IActionResult> Attack(int id)
         {
             var attackViewModel = new AttackViewModel
@@ -206,7 +199,6 @@ namespace StrategyGame.Controllers
                         attackViewModel.UnitId,
                         attackViewModel.EnemyCountryId,
                         attackViewModel.Quantity);
-                    await _countryService.CalculateBattlePointsAsync(attackViewModel.Id);
                 }
                 catch (GameException e)
                 {

@@ -38,11 +38,8 @@ namespace StrategyGame.Service
                 Count = 0
             };
 
-            country.CountryBuildings.Add(farm);
-            country.CountryBuildings.Add(barrack);
-
-            _context.CountryBuildings.Update(farm);
-            _context.CountryBuildings.Update(barrack);
+            _context.CountryBuildings.Add(farm);
+            _context.CountryBuildings.Add(barrack);
 
             Game game = _context.Games.FirstOrDefault();
             game.Countries.Add(country);
@@ -156,7 +153,10 @@ namespace StrategyGame.Service
 
         public async Task DeleteAsync(int id)
         {
-            Country country = await _context.Countries
+            var battles = await _context.Battles
+                .Where(c => c.AttackingCountryId == id)
+                .FirstOrDefaultAsync();
+            var country = await _context.Countries
                 .SingleAsync(m => m.Id == id);
             _context.Countries.Remove(country);
             await _context.SaveChangesAsync();
@@ -223,7 +223,6 @@ namespace StrategyGame.Service
         //        Building = building,
         //        TurnsLeft = 5
         //    };
-        //    country.CountryBuildingProgresses.Add(countryBuildingProgress);
         //    _context.CountryBuildingProgresses.Add(countryBuildingProgress);
         //    await _context.SaveChangesAsync();
         //}
@@ -280,53 +279,22 @@ namespace StrategyGame.Service
 
         //Egy fejlesztés hozzáadása
 
-        //public async Task AddInnovationAsync(int id, int innovationId)
-        //{
-        //    Country country = await _context.Countries.SingleAsync(c => c.Id == id);
-        //    Innovation innovation = await _context.Innovations.SingleAsync(i => i.Id == innovationId);
-        //    var countryInnovations = await _context.CountryInnovations
-        //                                            .Where(c => c.CountryId == id)
-        //                                            .Where(i => i.InnovationId == innovationId)
-        //                                            .FirstOrDefaultAsync();
-        //    var countryInnovationProgress = await _context.CountryInnovationProgresses
-        //        .SingleOrDefaultAsync(c => c.CountryId == id);
-
-        //    if (countryInnovationProgress != null)
-        //    {
-        //        throw new GameException("InnovationId", "Another innovation is under progress!");
-        //    }
-        //    CountryInnovationProgress newCountryInnovationProgress = new CountryInnovationProgress
-        //    {
-        //        CountryId = country.Id,
-        //        Country = country,
-        //        InnovationId = innovation.Id,
-        //        Innovation = innovation,
-        //        TurnsLeft = 15
-        //    };
-        //    country.CountryInnovationProgresses.Add(newCountryInnovationProgress);
-        //    _context.CountryInnovationProgresses.Add(newCountryInnovationProgress);
-        //    await _context.SaveChangesAsync();
-        //}
-
-        //Több fejlesztés hozzáadása
         public async Task AddInnovationAsync(int id, int innovationId)
         {
-            Country country = await _context.Countries
-                .Include(x => x.CountryInnovationProgresses)
-                .SingleAsync(c => c.Id == id);
-            Innovation innovation = await _context.Innovations
-                .SingleAsync(i => i.Id == innovationId);
-            var countryInnovations = await _context.CountryInnovationProgresses
-                .Where(c => c.CountryId == id)
-                .Where(i => i.InnovationId == innovationId)
-                .FirstOrDefaultAsync();
+            Country country = await _context.Countries.SingleAsync(c => c.Id == id);
+            Innovation innovation = await _context.Innovations.SingleAsync(i => i.Id == innovationId);
+            var countryInnovations = await _context.CountryInnovations
+                                                    .Where(c => c.CountryId == id)
+                                                    .Where(i => i.InnovationId == innovationId)
+                                                    .FirstOrDefaultAsync();
+            var countryInnovationProgress = await _context.CountryInnovationProgresses
+                .SingleOrDefaultAsync(c => c.CountryId == id);
 
-            if (countryInnovations != null)
+            if (countryInnovationProgress != null)
             {
-                throw new GameException("InnovationId", "You've already owned this innovation!");
+                throw new GameException("InnovationId", "Another innovation is under progress!");
             }
-
-            CountryInnovationProgress countryInnovationProgress = new CountryInnovationProgress
+            CountryInnovationProgress newCountryInnovationProgress = new CountryInnovationProgress
             {
                 CountryId = country.Id,
                 Country = country,
@@ -334,9 +302,40 @@ namespace StrategyGame.Service
                 Innovation = innovation,
                 TurnsLeft = 15
             };
-            _context.CountryInnovationProgresses.Add(countryInnovationProgress);
+            _context.CountryInnovationProgresses.Add(newCountryInnovationProgress);
             await _context.SaveChangesAsync();
         }
+
+        //Több fejlesztés hozzáadása
+
+        //public async Task AddInnovationAsync(int id, int innovationId)
+        //{
+        //    Country country = await _context.Countries
+        //        .Include(x => x.CountryInnovationProgresses)
+        //        .SingleAsync(c => c.Id == id);
+        //    Innovation innovation = await _context.Innovations
+        //        .SingleAsync(i => i.Id == innovationId);
+        //    var countryInnovations = await _context.CountryInnovationProgresses
+        //        .Where(c => c.CountryId == id)
+        //        .Where(i => i.InnovationId == innovationId)
+        //        .FirstOrDefaultAsync();
+
+        //    if (countryInnovations != null)
+        //    {
+        //        throw new GameException("InnovationId", "You've already owned this innovation!");
+        //    }
+
+        //    CountryInnovationProgress countryInnovationProgress = new CountryInnovationProgress
+        //    {
+        //        CountryId = country.Id,
+        //        Country = country,
+        //        InnovationId = innovation.Id,
+        //        Innovation = innovation,
+        //        TurnsLeft = 15
+        //    };
+        //    _context.CountryInnovationProgresses.Add(countryInnovationProgress);
+        //    await _context.SaveChangesAsync();
+        //}
 
         public async Task<List<CountryInnovation>> ListCountryInnovationsAsync(int id)
         {
@@ -354,7 +353,7 @@ namespace StrategyGame.Service
                .Where(c => c.CountryId == id)
                .Select(c => c.InnovationId);
 
-            List<Innovation> availableInnovations = await _context.Innovations
+            var availableInnovations = await _context.Innovations
                 .Where(x => !countryInnovations.Contains(x.Id))
                 .ToListAsync();
 
@@ -369,7 +368,6 @@ namespace StrategyGame.Service
                 if (countryInnovation.Innovation.Type == InnovationType.CityWall)
                 {
                     upgrade *= countryInnovation.Innovation.UpgradeStat;
-
                 }
                 else if (countryInnovation.Innovation.Type == InnovationType.Tactic)
                 {
@@ -405,7 +403,7 @@ namespace StrategyGame.Service
 
         public async Task CalculateBattlePointsAsync(int id)
         {
-            Country country = await _context.Countries.SingleAsync(c => c.Id == id);
+            var country = await _context.Countries.SingleAsync(c => c.Id == id);
             double attackPoint = 0;
             double defensePoint = 0;
             foreach (var countryUnit in country.CountryUnits)
@@ -430,7 +428,7 @@ namespace StrategyGame.Service
                 throw new GameException("Quantity", "Quantity cannot be null or negative");
             }
 
-            CountryUnit countryUnit = await _context.CountryUnits
+            var countryUnit = await _context.CountryUnits
                 .Where(c => c.CountryId == id)
                 .Where(u => u.UnitId == unitId)
                 .FirstOrDefaultAsync();
@@ -440,22 +438,22 @@ namespace StrategyGame.Service
                 throw new GameException("UnitId", "There is no available unit!");
             }
 
-            Country country = await _context.Countries
+            var country = await _context.Countries
                 .FirstOrDefaultAsync(c => c.Id == id);
 
-            Country enemyCountry = await _context.Countries
+            var enemyCountry = await _context.Countries
                 .FirstOrDefaultAsync(c => c.Id == enemyCountryId);
 
-            Game game = await _context.Games.FirstOrDefaultAsync();
+            var game = await _context.Games.FirstOrDefaultAsync();
 
-            Battle battle = await _context.Battles
+            var battle = await _context.Battles
                 .Where(c => c.AttackingCountryId == id)
                 .Where(c => c.DefendingCountryId == enemyCountryId)
                 .FirstOrDefaultAsync();
 
             if (battle != null)
             {
-                CountryUnit attackingCountryUnit = battle.AttackingCountryUnits
+                var attackingCountryUnit = battle.AttackingCountryUnits
                     .Where(unit => unit.UnitId == unitId)
                     .FirstOrDefault();
 
@@ -467,7 +465,7 @@ namespace StrategyGame.Service
                 }
                 else
                 {
-                    AttackingCountryUnit newAttackingCountryUnit = new AttackingCountryUnit(countryUnit)
+                    var newAttackingCountryUnit = new AttackingCountryUnit(countryUnit)
                     {
                         Count = quantity
                     };
@@ -480,7 +478,7 @@ namespace StrategyGame.Service
             }
             else
             {
-                AttackingCountryUnit newAttackingCountryUnit = new AttackingCountryUnit(countryUnit)
+                var newAttackingCountryUnit = new AttackingCountryUnit(countryUnit)
                 {
                     Count = quantity
                 };
@@ -494,6 +492,7 @@ namespace StrategyGame.Service
                 country.AttackingCountryUnits.Add(newAttackingCountryUnit);
                 game.Battles.Add(battle);
             }
+            await CalculateBattlePointsAsync(country.Id);
             _context.CountryUnits.Update(countryUnit);
             await _context.SaveChangesAsync();
         }
@@ -503,7 +502,8 @@ namespace StrategyGame.Service
             List<Battle> battles = await _context.Battles
                 .Include(x => x.AttackingCountryUnits)
                 .Include(x => x.DefendingCountry)
-                .Where(c => c.AttackingCountryId == id).ToListAsync();
+                .Where(c => c.AttackingCountryId == id)
+                .ToListAsync();
 
             if (battles != null)
             {

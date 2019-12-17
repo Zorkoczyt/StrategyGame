@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace StrategyGame.Models
 {
-    public class StrategyGameContext : DbContext
+    public class StrategyGameContext : IdentityDbContext
     {
         public StrategyGameContext(DbContextOptions<StrategyGameContext> options)
             : base(options)
@@ -28,6 +29,7 @@ namespace StrategyGame.Models
         public DbSet<Battle> Battles { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Archer>()
                 .HasBaseType<Unit>();
             modelBuilder.Entity<Horseman>()
